@@ -45,32 +45,37 @@ def run_code(language, code):
             files_to_delete.append(filepath)
 
         elif language == "c":
-            if os.name == "nt":
-                filepath = f"{filename}.c"
-                exe_file = f"{filename}.exe"
-                with open(filepath, "w") as f:
-                    f.write(code)
-                subprocess.run(["gcc", filepath, "-o", exe_file], timeout=5)
-                cmd = [exe_file]
-                files_to_delete.extend([filepath, exe_file])
-            elif os.name == "posix":
-                filepath = f"{filename}.c"
-                exe_file = f"./{filename}"  # Linux executable without .exe, prefixed with ./
-                with open(filepath, "w") as f:
-                    f.write(code)
-                subprocess.run(["gcc", filepath, "-o", exe_file], timeout=5)
-                cmd = [exe_file]
-                files_to_delete.extend([filepath, exe_file])
+            filepath = f"{filename}.c"
+            exe_file = f"{filename}.exe" if os.name == "nt" else f"./{filename}"
+
+            with open(filepath, "w") as f:
+                f.write(code)
+
+            compile_proc = subprocess.run(["gcc", filepath, "-o", exe_file], capture_output=True, text=True, timeout=5)
+            if compile_proc.returncode != 0:
+                return {
+                    "stdout": compile_proc.stdout.strip(),
+                    "stderr": compile_proc.stderr.strip(),
+                    "success": False
+                }
+
+            cmd = [exe_file]
+            files_to_delete.extend([filepath, exe_file])
 
         elif language == "java":
-            # Use capitalized class name and filename
             class_name = "Main"
             java_file = f"{class_name}.java"
             with open(java_file, "w") as f:
                 f.write(f"public class {class_name} {{\n{code}\n}}")
+
             compile_proc = subprocess.run(["javac", java_file], capture_output=True, text=True, timeout=5)
             if compile_proc.returncode != 0:
-                return {"stdout": "", "stderr": compile_proc.stderr, "success": False}
+                return {
+                    "stdout": compile_proc.stdout.strip(),
+                    "stderr": compile_proc.stderr.strip(),
+                    "success": False
+                }
+
             cmd = ["java", class_name]
             files_to_delete.extend([java_file, f"{class_name}.class"])
 
