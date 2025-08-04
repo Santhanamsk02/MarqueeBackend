@@ -2,34 +2,67 @@ import subprocess
 import uuid
 import os
 import re
+import glob
 
-def is_print_only(code, language):
+def is_print_only(code, language, expected_output=None):
     lines = [line.strip() for line in code.strip().split('\n') if line.strip()]
 
     if language == "python":
-        if all(re.match(r'^print\s*\(.*\)$', line) for line in lines):
-            return True, "Respected Participant We Know You Are Brilliant: Please write logic, not just print statements."
+        logic_keywords = ["for", "while", "def", "return", "*", "/", "+", "-", "import", "math", "range", "="]
+        has_logic = any(any(keyword in line for keyword in logic_keywords) for line in lines)
+        print_statements = [line for line in lines if re.match(r'^print\s*\(.*\)$', line)]
+        only_printing_literals = all(re.match(r'^print\s*\((\d+|["\'].*["\'])\)$', line) for line in print_statements)
+
+        if print_statements and not has_logic and only_printing_literals:
+            if expected_output and str(expected_output) in code:
+                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Print Statement. Write the logic."
+            else:
+                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Print Statement. Write the logic."
 
     elif language == "javascript":
-        if all(re.match(r'^console\.log\s*\(.*\);?$', line) for line in lines):
-            return True, "Respected Participant We Know You Are Brilliant: Please write logic, console.log alone is not allowed."
+        logic_keywords = ["for", "while", "function", "return", "*", "/", "+", "-", "let", "const", "var", "="]
+        has_logic = any(any(keyword in line for keyword in logic_keywords) for line in lines)
+        print_statements = [line for line in lines if re.match(r'^console\.log\s*\(.*\);?$', line)]
+        only_printing_literals = all(re.match(r'^console\.log\s*\((\d+|["\'`].*["\'`])\);?$', line) for line in print_statements)
+
+        if print_statements and not has_logic and only_printing_literals:
+            if expected_output and str(expected_output) in code:
+                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Console.log() Statement. Write the logic."
+            else:
+                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Console.log() Statement. Write the logic."
 
     elif language == "java":
-        print_calls = re.findall(r'System\.out\.println\s*\(.*\);', code)
-        non_print_lines = [line for line in lines if "System.out.println" not in line and not re.match(r'^(public|class|static|void|\{|\}|import|package)', line)]
-        if len(print_calls) > 0 and len(non_print_lines) == 0:
-            return True, "Respected Participant We Know You Are Brilliant: Please write logic, Only System.out.println is not accepted."
+        logic_keywords = ["for", "while", "if", "return", "*", "/", "+", "-", "int", "double", "=", "Scanner", "Math"]
+        has_logic = any(any(keyword in line for keyword in logic_keywords) for line in lines if "System.out.println" not in line)
+        print_statements = [line for line in lines if "System.out.println" in line]
+        only_printing_literals = all(
+            re.match(r'System\.out\.println\s*\((\d+|["\'].*["\'])\);', line) for line in print_statements
+        )
+
+        if print_statements and not has_logic and only_printing_literals:
+            if expected_output and str(expected_output) in code:
+                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Print Statement. Write the logic."
+            else:
+                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Print Statement. Write the logic."
 
     elif language == "c":
-        print_calls = re.findall(r'printf\s*\(.*\);', code)
-        non_print_lines = [line for line in lines if "printf" not in line and not re.match(r'^(#include|int\s+main|\{|\}|return|void)', line)]
-        if len(print_calls) > 0 and len(non_print_lines) == 0:
-            return True, "Respected Participant We Know You Are Brilliant : Only printf found. Add some logic too."
+        logic_keywords = ["for", "while", "*", "/", "+", "-", "scanf", "=", "int", "return"]
+        has_logic = any(any(keyword in line for keyword in logic_keywords) for line in lines if "printf" not in line)
+        print_statements = [line for line in lines if "printf" in line]
+        only_printing_literals = all(
+            re.match(r'printf\s*\(\s*(".*?"|\d+)\s*\)\s*;', line) for line in print_statements
+        )
+
+        if print_statements and not has_logic and only_printing_literals:
+            if expected_output and str(expected_output) in code:
+                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Printf Statement. Write the logic."
+            else:
+                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Printf Statement. Write the logic."
 
     return False, ""
 
-def run_code(language, code):
-    only_print, message = is_print_only(code, language)
+def run_code(language, code, expected_output=None):
+    only_print, message = is_print_only(code, language, expected_output)
     if only_print:
         return {"stdout": "", "stderr": message, "success": False}
 
@@ -47,10 +80,8 @@ def run_code(language, code):
         elif language == "c":
             filepath = f"{filename}.c"
             exe_file = f"{filename}.exe" if os.name == "nt" else f"./{filename}"
-
             with open(filepath, "w") as f:
                 f.write(code)
-
             compile_proc = subprocess.run(["gcc", filepath, "-o", exe_file], capture_output=True, text=True, timeout=5)
             if compile_proc.returncode != 0:
                 return {
@@ -58,7 +89,6 @@ def run_code(language, code):
                     "stderr": compile_proc.stderr.strip(),
                     "success": False
                 }
-
             cmd = [exe_file]
             files_to_delete.extend([filepath, exe_file])
 
@@ -66,8 +96,10 @@ def run_code(language, code):
             class_name = "Main"
             java_file = f"{class_name}.java"
             with open(java_file, "w") as f:
-                f.write(f"public class {class_name} {{\n{code}\n}}")
-
+                if not re.search(r'public\s+class\s+Main', code):
+                    f.write(f"public class {class_name} {{\n{code}\n}}")
+                else:
+                    f.write(code)
             compile_proc = subprocess.run(["javac", java_file], capture_output=True, text=True, timeout=5)
             if compile_proc.returncode != 0:
                 return {
@@ -75,9 +107,9 @@ def run_code(language, code):
                     "stderr": compile_proc.stderr.strip(),
                     "success": False
                 }
-
             cmd = ["java", class_name]
-            files_to_delete.extend([java_file, f"{class_name}.class"])
+            files_to_delete.append(java_file)
+            files_to_delete.extend(glob.glob(f"{class_name}*.class"))
 
         elif language == "javascript":
             filepath = f"{filename}.js"
@@ -108,5 +140,3 @@ def run_code(language, code):
                     os.remove(f)
                 except Exception as cleanup_error:
                     print(f"Cleanup error: {cleanup_error}")
-            else:
-                print(f"File to delete not found: {f}")

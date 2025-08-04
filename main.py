@@ -5,6 +5,7 @@ from run_code import run_code
 import datetime
 from auth import router as auth_router
 from db import results_collection
+from db import students_collection
 from admin import router as admin_router
 
 
@@ -28,7 +29,7 @@ async def compile_code(data: Request):
     expected_output = body.get("expected_output")
     
 
-    result = run_code(lang, code)
+    result = run_code(lang, code,expected_output)
     output = result.get("stdout", "").strip()
     correct = output == str(expected_output).strip()
 
@@ -47,7 +48,7 @@ async def submit_exam(data: Request):
     test_type=body.get("test_type","Unknown_Test")
     malpractice=body.get("malpractice")
     total_marks = body.get("totalMarks")
-
+    done=body.get("done")
     result_doc = {
         "username": username,
         "total_marks": total_marks,
@@ -57,6 +58,7 @@ async def submit_exam(data: Request):
         "submitted_at": datetime.datetime.utcnow()
     }
     results_collection.insert_one(result_doc)
+    students_collection.update_one({"username": username}, {"$set": {"done": done}})
     return {"message": f"Result saved for {username}"}
 
 

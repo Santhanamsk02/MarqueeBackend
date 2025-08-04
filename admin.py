@@ -97,6 +97,7 @@ async def upload_students_file(file: UploadFile = File(...)):
         students_to_insert = df.to_dict(orient="records")
         for s in students_to_insert:
             s["cgpa"] = float(s["cgpa"])
+            s["done"] = 0
 
         try:
             students_collection.insert_many(students_to_insert, ordered=False)
