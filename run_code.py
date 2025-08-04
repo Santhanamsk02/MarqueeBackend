@@ -45,13 +45,22 @@ def run_code(language, code):
             files_to_delete.append(filepath)
 
         elif language == "c":
-            filepath = f"{filename}.c"
-            exe_file = f"{filename}.exe"
-            with open(filepath, "w") as f:
-                f.write(code)
-            subprocess.run(["gcc", filepath, "-o", exe_file], timeout=5)
-            cmd = [exe_file]
-            files_to_delete.extend([filepath, exe_file])
+            if os.name == "nt":
+                filepath = f"{filename}.c"
+                exe_file = f"{filename}.exe"
+                with open(filepath, "w") as f:
+                    f.write(code)
+                subprocess.run(["gcc", filepath, "-o", exe_file], timeout=5)
+                cmd = [exe_file]
+                files_to_delete.extend([filepath, exe_file])
+            elif os.name == "posix":
+                filepath = f"{filename}.c"
+                exe_file = f"./{filename}"  # Linux executable without .exe, prefixed with ./
+                with open(filepath, "w") as f:
+                    f.write(code)
+                subprocess.run(["gcc", filepath, "-o", exe_file], timeout=5)
+                cmd = [exe_file]
+                files_to_delete.extend([filepath, exe_file])
 
         elif language == "java":
             java_file = "main.java"
