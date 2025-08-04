@@ -11,7 +11,7 @@ class LoginRequest(BaseModel):
 @router.post("/login")
 async def login(data: LoginRequest):
     if data.username == "admin" and data.password == "admin@123":
-        return {"token": "admin", "role": "admin"}
+        return {"token": "admin", "role": "admin","done":"none"}
 
     user = users_collection.find_one({
         "username": data.username,
@@ -21,7 +21,7 @@ async def login(data: LoginRequest):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid Credentials")
 
-    return {"token": data.username, "role": "student"}
+    return {"token": data.username, "role": "student","done":str(user.done)}
 
 @router.get("/user-profile/{username}")
 async def get_user_profile(username: str):
