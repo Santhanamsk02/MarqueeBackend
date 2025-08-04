@@ -8,23 +8,23 @@ def is_print_only(code, language):
 
     if language == "python":
         if all(re.match(r'^print\s*\(.*\)$', line) for line in lines):
-            return True, "Respected Partcipant We Know You Are Brilliant: Please write logic, not just print statements."
+            return True, "Respected Participant We Know You Are Brilliant: Please write logic, not just print statements."
 
     elif language == "javascript":
         if all(re.match(r'^console\.log\s*\(.*\);?$', line) for line in lines):
-            return True, "Respected Partcipant We Know You Are Brilliant: Please write logic, console.log alone is not allowed."
+            return True, "Respected Participant We Know You Are Brilliant: Please write logic, console.log alone is not allowed."
 
     elif language == "java":
         print_calls = re.findall(r'System\.out\.println\s*\(.*\);', code)
         non_print_lines = [line for line in lines if "System.out.println" not in line and not re.match(r'^(public|class|static|void|\{|\}|import|package)', line)]
         if len(print_calls) > 0 and len(non_print_lines) == 0:
-            return True, "Respected Partcipant We Know You Are Brilliant: Please write logic, Only System.out.println is not accepted."
+            return True, "Respected Participant We Know You Are Brilliant: Please write logic, Only System.out.println is not accepted."
 
     elif language == "c":
         print_calls = re.findall(r'printf\s*\(.*\);', code)
         non_print_lines = [line for line in lines if "printf" not in line and not re.match(r'^(#include|int\s+main|\{|\}|return|void)', line)]
         if len(print_calls) > 0 and len(non_print_lines) == 0:
-            return True, "Respected Partcipant We Know You Are Brilliant : Only printf found. Add some logic too."
+            return True, "Respected Participant We Know You Are Brilliant : Only printf found. Add some logic too."
 
     return False, ""
 
@@ -63,8 +63,9 @@ def run_code(language, code):
                 files_to_delete.extend([filepath, exe_file])
 
         elif language == "java":
-            java_file = "main.java"
-            class_name = "main"
+            # Use capitalized class name and filename
+            class_name = "Main"
+            java_file = f"{class_name}.java"
             with open(java_file, "w") as f:
                 f.write(f"public class {class_name} {{\n{code}\n}}")
             compile_proc = subprocess.run(["javac", java_file], capture_output=True, text=True, timeout=5)
@@ -102,3 +103,5 @@ def run_code(language, code):
                     os.remove(f)
                 except Exception as cleanup_error:
                     print(f"Cleanup error: {cleanup_error}")
+            else:
+                print(f"File to delete not found: {f}")
