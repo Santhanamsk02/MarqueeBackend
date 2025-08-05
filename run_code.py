@@ -14,10 +14,7 @@ def is_print_only(code, language, expected_output=None):
         only_printing_literals = all(re.match(r'^print\s*\((\d+|["\'].*["\'])\)$', line) for line in print_statements)
 
         if print_statements and not has_logic and only_printing_literals:
-            if expected_output and str(expected_output) in code:
-                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Print Statement. Write the logic."
-            else:
-                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Print Statement. Write the logic."
+            return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Print Statement. Write the logic."
 
     elif language == "javascript":
         logic_keywords = ["for", "while", "function", "return", "*", "/", "+", "-", "let", "const", "var", "="]
@@ -26,10 +23,7 @@ def is_print_only(code, language, expected_output=None):
         only_printing_literals = all(re.match(r'^console\.log\s*\((\d+|["\'`].*["\'`])\);?$', line) for line in print_statements)
 
         if print_statements and not has_logic and only_printing_literals:
-            if expected_output and str(expected_output) in code:
-                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Console.log() Statement. Write the logic."
-            else:
-                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Console.log() Statement. Write the logic."
+            return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Console.log() Statement. Write the logic."
 
     elif language == "java":
         logic_keywords = ["for", "while", "if", "return", "*", "/", "+", "-", "int", "double", "=", "Scanner", "Math"]
@@ -40,10 +34,7 @@ def is_print_only(code, language, expected_output=None):
         )
 
         if print_statements and not has_logic and only_printing_literals:
-            if expected_output and str(expected_output) in code:
-                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Print Statement. Write the logic."
-            else:
-                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Print Statement. Write the logic."
+            return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Print Statement. Write the logic."
 
     elif language == "c":
         logic_keywords = ["for", "while", "*", "/", "+", "-", "scanf", "=", "int", "return"]
@@ -54,10 +45,7 @@ def is_print_only(code, language, expected_output=None):
         )
 
         if print_statements and not has_logic and only_printing_literals:
-            if expected_output and str(expected_output) in code:
-                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Printf Statement. Write the logic."
-            else:
-                return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Printf Statement. Write the logic."
+            return True, "Respected Participant We Know You Are Very Very Brilliant: Don't Print the output Using Printf Statement. Write the logic."
 
     return False, ""
 
@@ -74,14 +62,15 @@ def run_code(language, code, expected_output=None):
             filepath = f"{filename}.py"
             with open(filepath, "w") as f:
                 f.write(code)
-            cmd = ["python", filepath]
             files_to_delete.append(filepath)
+            cmd = ["python", filepath]
 
         elif language == "c":
             filepath = f"{filename}.c"
-            exe_file = f"{filename}.exe" if os.name == "nt" else f"./{filename}"
             with open(filepath, "w") as f:
                 f.write(code)
+            files_to_delete.append(filepath)
+            exe_file = f"{filename}.exe" if os.name == "nt" else f"./{filename}"
             compile_proc = subprocess.run(["gcc", filepath, "-o", exe_file], capture_output=True, text=True, timeout=5)
             if compile_proc.returncode != 0:
                 return {
@@ -89,8 +78,8 @@ def run_code(language, code, expected_output=None):
                     "stderr": compile_proc.stderr.strip(),
                     "success": False
                 }
+            files_to_delete.append(exe_file)
             cmd = [exe_file]
-            files_to_delete.extend([filepath, exe_file])
 
         elif language == "java":
             class_name = "Main"
@@ -100,6 +89,7 @@ def run_code(language, code, expected_output=None):
                     f.write(f"public class {class_name} {{\n{code}\n}}")
                 else:
                     f.write(code)
+            files_to_delete.append(java_file)
             compile_proc = subprocess.run(["javac", java_file], capture_output=True, text=True, timeout=5)
             if compile_proc.returncode != 0:
                 return {
@@ -107,16 +97,16 @@ def run_code(language, code, expected_output=None):
                     "stderr": compile_proc.stderr.strip(),
                     "success": False
                 }
+            class_files = glob.glob(f"{class_name}*.class")
+            files_to_delete.extend(class_files)
             cmd = ["java", class_name]
-            files_to_delete.append(java_file)
-            files_to_delete.extend(glob.glob(f"{class_name}*.class"))
 
         elif language == "javascript":
             filepath = f"{filename}.js"
             with open(filepath, "w") as f:
                 f.write(code)
-            cmd = ["node", filepath]
             files_to_delete.append(filepath)
+            cmd = ["node", filepath]
 
         else:
             return {"error": "Unsupported language"}
