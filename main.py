@@ -49,6 +49,8 @@ async def submit_exam(data: Request):
     malpractice=body.get("malpractice")
     total_marks = body.get("totalMarks")
     done=body.get("done")
+    restrict=body.get("restrict")
+    doneTest=body.get("doneTest","None")
     result_doc = {
         "username": username,
         "total_marks": total_marks,
@@ -58,7 +60,7 @@ async def submit_exam(data: Request):
         "submitted_at": datetime.datetime.utcnow()
     }
     results_collection.insert_one(result_doc)
-    students_collection.update_one({"username": username}, {"$set": {"done": done}})
+    students_collection.update_one({"username": username}, {"$set": {"done": done,"restrict":restrict,"doneTest":doneTest}})
     return {"message": f"Result saved for {username}"}
 
 

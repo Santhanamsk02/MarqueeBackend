@@ -98,6 +98,8 @@ async def upload_students_file(file: UploadFile = File(...)):
         for s in students_to_insert:
             s["cgpa"] = float(s["cgpa"])
             s["done"] = 0
+            s["restrict"] = False
+            s["doneTest"] = None
 
         try:
             students_collection.insert_many(students_to_insert, ordered=False)

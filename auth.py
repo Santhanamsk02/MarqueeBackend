@@ -17,11 +17,14 @@ async def login(data: LoginRequest):
         "username": data.username,
         "password": data.password
     })
+    print(user)
 
     if not user:
         raise HTTPException(status_code=401, detail="Invalid Credentials")
+    if (user["restrict"] == True):
+        raise HTTPException(status_code=403, detail="User Restricted")
 
-    return {"token": data.username, "role": "student","done":str(user.done)}
+    return {"token": data.username, "role": "student","done":str(user["done"]),"doneTest":user["doneTest"]}
 
 @router.get("/user-profile/{username}")
 async def get_user_profile(username: str):
