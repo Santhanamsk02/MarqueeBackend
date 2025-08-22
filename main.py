@@ -51,12 +51,14 @@ async def submit_exam(data: Request):
     done=body.get("done")
     restrict=body.get("restrict")
     doneTest=body.get("doneTest","None")
+    screenshot=body.get("screenshot")
     result_doc = {
         "username": username,
         "total_marks": total_marks,
         "details": results,
         "test_type":test_type,
         "malpractice":malpractice,
+        "screenshot":screenshot,
         "submitted_at": datetime.datetime.utcnow()
     }
     results_collection.insert_one(result_doc)
