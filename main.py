@@ -61,16 +61,18 @@ async def submit_exam(data: Request):
 
     screenshot_url = None
     if screenshot:
+        img_data = screenshot
+        if not screenshot.startswith("data:image"):
+            img_data = f"data:image/png;base64,{screenshot}"
         try:
-            # ✅ Upload optimized screenshot directly
             upload_response = cloudinary.uploader.upload(
-                f"data:image/png;base64,{screenshot}",
+                img_data,
                 folder="exam_screenshots",
                 public_id=f"{username}_{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
                 overwrite=True,
                 transformation=[
                     {"quality": "auto", "fetch_format": "auto", "width": 800, "crop": "scale"}
-                ]
+                ]   
             )
             screenshot_url = upload_response.get("secure_url")
         except Exception as e:
