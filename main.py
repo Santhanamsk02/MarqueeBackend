@@ -40,7 +40,12 @@ async def compile_code(data: Request):
         "error": result.get("stderr") if not correct else None
     }
 
-
+cloudinary.config( 
+  cloud_name = "dcfnjebbu", 
+  api_key = "952332849418642", 
+  api_secret = "ZcDgFv3qKFbLjlNVd-m0-qnjd-U",
+  secure = True
+)
 @app.post("/submit")
 async def submit_exam(data: Request):
     body = await data.json()
