@@ -9,7 +9,10 @@ from db import students_collection
 from admin import router as admin_router
 import cloudinary.uploader
 import base64
-
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+import shutil
+import os
 app = FastAPI()
 
 app.add_middleware(
@@ -46,6 +49,39 @@ cloudinary.config(
   api_secret = "ZcDgFv3qKFbLjlNVd-m0-qnjd-U",
   secure = True
 )
+@app.post("/upload-video")
+async def upload_video(video: UploadFile = File(...)):
+    try:
+        # Save temporarily
+        temp_file = f"temp_{video.filename}"
+        with open(temp_file, "wb") as buffer:
+            shutil.copyfileobj(video.file, buffer)
+
+        # Upload to Cloudinary with transformation (low quality)
+        upload_result = cloudinary.uploader.upload(
+            temp_file,
+            resource_type="video",
+            folder="proctoring_uploads",
+            public_id=os.path.splitext(video.filename)[0],
+            eager=[{"quality": "auto:low"}],  # ✅ lower video quality
+            eager_async=True  # run transformation async
+        )
+        print("Video uploaded successfully")
+        # Remove temp file
+        os.remove(temp_file)
+
+        return JSONResponse(
+            content={
+                "message": "Video uploaded successfully",
+                "cloudinary_url": upload_result["secure_url"]
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=500
+        )
 @app.post("/submit")
 async def submit_exam(data: Request):
     body = await data.json()
