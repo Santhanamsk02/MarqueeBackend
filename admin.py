@@ -37,11 +37,12 @@ class Student(BaseModel):
     password: str
     email: str
     mobile: str
-    classSection: str
+    Class: str
+    Section:str
     department: str
     cgpa: float
     regno: str
-
+    Year:int
 @router.post("/students")
 def add_student(student: Student):
     students_collection.insert_one(student.dict())
@@ -89,7 +90,7 @@ async def upload_students_file(file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail="Only CSV or Excel files are allowed")
 
         # Ensure required fields are present
-        required_columns = {"name", "rollno", "username", "password", "email", "mobile", "classSection", "department", "cgpa", "regno"}
+        required_columns = {"name", "rollno", "username", "password", "email", "mobile", "class","Section", "department", "cgpa", "regno","year"}
         if not required_columns.issubset(set(df.columns)):
             raise HTTPException(status_code=400, detail=f"Missing columns: {required_columns - set(df.columns)}")
 

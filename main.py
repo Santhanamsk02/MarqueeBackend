@@ -93,7 +93,10 @@ async def submit_exam(data: Request):
     done = body.get("done")
     restrict = body.get("restrict")
     doneTest = body.get("doneTest", "None")
-    screenshot = body.get("screenshot")  # base64 string
+    screenshot = body.get("screenshot")
+    department=body.get("department")
+    year=body.get("year")
+    section=body.get("section")
 
     screenshot_url = None
     if screenshot:
@@ -120,7 +123,10 @@ async def submit_exam(data: Request):
         "details": results,
         "test_type": test_type,
         "malpractice": malpractice,
-        "screenshot_url": screenshot_url,  # optimized URL stored
+        "screenshot_url": screenshot_url,
+         "department":department,
+         "year":year,
+         "section":section,
         "submitted_at": datetime.datetime.utcnow()
     }
 
