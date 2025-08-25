@@ -90,7 +90,7 @@ async def upload_students_file(file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail="Only CSV or Excel files are allowed")
 
         # Ensure required fields are present
-        required_columns = {"name", "rollno", "username", "password", "email", "mobile", "class","Section", "department", "cgpa", "regno","year"}
+        required_columns = {"name", "rollno", "username", "password", "email", "mobile", "Class","Section", "department", "cgpa", "regno","Year"}
         if not required_columns.issubset(set(df.columns)):
             raise HTTPException(status_code=400, detail=f"Missing columns: {required_columns - set(df.columns)}")
 
