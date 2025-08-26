@@ -24,7 +24,7 @@ async def login(data: LoginRequest):
     if (user["restrict"] == True):
         raise HTTPException(status_code=403, detail="User Restricted")
 
-    return {"token": data.username, "role": "student","done":str(user["done"]),"doneTest":user["doneTest"],"department":user["department"],"year":user["Year"],"section":user["Section"]}
+    return {"token": data.username, "role": "student","done":str(user["done"]),"doneTest":user["doneTest"],"department":user["department"],"year":user["Year"],"section":user["Section"],"name":user["name"],"regno":user["regno"]}
 
 @router.get("/user-profile/{username}")
 async def get_user_profile(username: str):
