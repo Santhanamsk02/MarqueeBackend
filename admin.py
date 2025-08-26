@@ -125,8 +125,13 @@ def add_question(q: Question):
 
 @router.get("/codingquestions")
 def get_questions():
-    all_questions = data_from_db[0]["Coding"]
+    docs = questions_collection.find({"TestType":"Coding"}, { "Coding": 1, "_id": 0 })
+    all_questions = []
+    for doc in docs:
+        all_questions.extend(doc["Coding"])
+
     random_questions = random.sample(all_questions, 5)
+
     return [{"Coding": random_questions}]
 
 @router.get("/mcqquestions")
