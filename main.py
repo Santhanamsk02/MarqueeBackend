@@ -97,6 +97,8 @@ async def submit_exam(data: Request):
     department=body.get("department")
     year=body.get("year")
     section=body.get("section")
+    name=body.get("name")
+    regno=body.get("regno")
 
     screenshot_url = None
     if screenshot:
@@ -127,6 +129,8 @@ async def submit_exam(data: Request):
          "department":department,
          "year":year,
          "section":section,
+         "name":name,
+         "regno":regno,
         "submitted_at": datetime.datetime.utcnow()
     }
 

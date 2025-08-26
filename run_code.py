@@ -64,7 +64,6 @@ def run_code(language, code, expected_output=None):
                 f.write(code)
             files_to_delete.append(filepath)
             cmd = ["python", filepath]
-
         elif language == "c":
             filepath = f"{filename}.c"
             with open(filepath, "w") as f:

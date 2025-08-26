@@ -7,6 +7,7 @@ import pandas as pd
 import io
 from pymongo.errors import BulkWriteError
 from typing import List, Optional
+import random
 
 
 
@@ -124,11 +125,24 @@ def add_question(q: Question):
 
 @router.get("/codingquestions")
 def get_questions():
-    return list(questions_collection.find({"TestType":"Coding"}, { "Coding": 1, "_id": 0 }))
+    all_questions = data_from_db[0]["Coding"]
+    random_questions = random.sample(all_questions, 5)
+    return [{"Coding": random_questions}]
 
 @router.get("/mcqquestions")
 def get_questions():
-    return list(questions_collection.find({"TestType":"MCQ"}, { "MCQ": 1, "_id": 0 }))
+    docs = list(questions_collection.find(
+        {"TestType": "MCQ"},
+        {"MCQ": 1, "_id": 0}
+    ))
+
+    all_questions = []
+    for doc in docs:
+        all_questions.extend(doc["MCQ"])
+
+    random_questions = random.sample(all_questions, 25)
+
+    return [{"MCQ": random_questions}]
 
 @router.put("/questions/{id}")
 def update_question(id: int, q: Question):
