@@ -99,6 +99,13 @@ async def submit_exam(data: Request):
     section=body.get("section")
     name=body.get("name")
     regno=body.get("regno")
+    mcqdone=body.get("mcqdone")
+    codingdone=body.get("codingdone")
+    mcqpercent=body.get("mcqpercent")
+    codingpercent=body.get("codingpercent")
+    totalpercent=body.get("totalpercent")
+    mcqmalpractice=body.get("mcqmalpractice")
+    codingmalpractice=body.get("codingmalpractice")
 
     screenshot_url = None
     if screenshot:
@@ -137,7 +144,7 @@ async def submit_exam(data: Request):
     results_collection.insert_one(result_doc)
     students_collection.update_one(
         {"username": username},
-        {"$set": {"done": done, "restrict": restrict, "doneTest": doneTest}}
+        {"$set": {"done": done, "restrict": restrict, "doneTest": doneTest,"mcqdone":mcqdone,"codingdone":codingdone,"mcqpercent":mcqpercent,"codingpercent":codingpercent,"totalpercent":totalpercent,"mcqmalpractice":mcqmalpractice,"codingmalpractice":codingmalpractice}}
     )
     return {"message": f"Result saved for {username}"}
 

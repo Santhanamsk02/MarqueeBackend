@@ -138,6 +138,13 @@ async def upload_students_file(file: UploadFile = File(...)):
             s["done"] = 0
             s["restrict"] = False
             s["doneTest"] = None
+            s["mcqdone"]=False
+            s["codingdone"]=False
+            s["mcqpercent"]=0
+            s["codingpercent"]=0
+            s["mcqmalpractice"]=False
+            s["codingmalpractice"]=False
+            s["totalpercent"]=0
 
         try:
             students_collection.insert_many(students_to_insert, ordered=False)
