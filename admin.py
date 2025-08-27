@@ -166,7 +166,7 @@ def get_questions():
     for doc in docs:
         all_questions.extend(doc["Coding"])
 
-    random_questions = random.sample(all_questions, 5)
+    random_questions = random.sample(all_questions, docs["TotalQuestions"])
 
     return [{"Coding": random_questions}]
 
@@ -181,7 +181,7 @@ def get_questions():
     for doc in docs:
         all_questions.extend(doc["MCQ"])
 
-    random_questions = random.sample(all_questions, 25)
+    random_questions = random.sample(all_questions, docs["TotalQuestions"])
 
     return [{"MCQ": random_questions}]
 
@@ -198,7 +198,8 @@ async def upload_excel(
     Time: str = Form(...),
     TestName: str = Form(...),
     TestType: str = Form(...),
-    TotalQuestions: str = Form(...)
+    TotalQuestions: str = Form(...),
+    StartTime:str = Form(...),
 ):
     contents = await file.read()
     try:
@@ -214,6 +215,7 @@ async def upload_excel(
                 })
             questions_collection.insert_one({
                 "TestType": TestType,
+                "StartTime":StartTime,
                 "TestName": TestName,
                 "Time": Time,
                 "TotalQuestions": TotalQuestions,
@@ -229,6 +231,7 @@ async def upload_excel(
             questions_collection.insert_one({
                 "TestType": TestType,
                 "TestName": TestName,
+                "StartTime":StartTime,
                 "Time": Time,
                 "TotalQuestions": TotalQuestions,
                 "Coding": questions
