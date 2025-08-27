@@ -84,6 +84,9 @@ def get_students(rollno: str = Query(None)):
         "total": total_count,   # total number of matching students
         "students": docs        # student data (limited to 50 if rollno not provided)
     }
+@router.get("/getallstudents")
+def get_students():
+    return list(students_collection.find({}, {"_id": 0}))
 
 @router.get("/results")
 def get_results():
@@ -184,15 +187,13 @@ def get_questions():
         {"TestType": "MCQ"},
         {"MCQ": 1, "_id": 0}
     ))
+    print(docs)
     ques=list(questions_collection.find({"TestType": "MCQ"},{"TotalQuestions":1,"_id":0}))[0]
-   
 
     all_questions = []
     for doc in docs:
         all_questions.extend(doc["MCQ"])
-
     random_questions = random.sample(all_questions,int(ques["TotalQuestions"]))
-
     return [{"MCQ": random_questions}]
 
 @router.put("/questions/{id}")
