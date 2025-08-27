@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException,Query,Request
 from db import students_collection, results_collection, questions_collection
 from pydantic import BaseModel
 from typing import List, Optional
@@ -8,7 +8,7 @@ import io
 from pymongo.errors import BulkWriteError
 from typing import List, Optional
 import random
-
+from bson import ObjectId
 
 
 class MCQModel(BaseModel):
@@ -44,6 +44,10 @@ class Student(BaseModel):
     cgpa: float
     regno: str
     Year:int
+
+
+
+
 @router.post("/students")
 def add_student(student: Student):
     students_collection.insert_one(student.dict())
@@ -58,22 +62,54 @@ async def create_test(test: TestModel):
 async def get_test():
     return list(questions_collection.find({},{"_id":0}))
 
+
 @router.get("/students")
-def get_students():
-    return list(students_collection.find({}, {"_id": 0}))
+def get_students(rollno: str = Query(None)):
+    if rollno:
+        # Filter by rollno (case-insensitive search)
+        docs = list(students_collection.find(
+            {"rollno": {"$regex": rollno, "$options": "i"}},
+            {"_id": 0}
+        ))
+        total_count = students_collection.count_documents({"rollno": {"$regex": rollno, "$options": "i"}})
+    else:
+        # Return only the first 50 students when rollno not mentioned
+        docs = list(students_collection.find(
+            {},
+            {"_id": 0}
+        ).limit(50))
+        total_count = students_collection.count_documents({})
 
-@router.put("/students/{username}")
-def update_student(username: str, student: Student):
-    result = students_collection.update_one({"username": username}, {"$set": student.dict()})
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Student not found")
-    return {"message": "Student updated"}
+    return {
+        "total": total_count,   # total number of matching students
+        "students": docs        # student data (limited to 50 if rollno not provided)
+    }
 
-# Results
 @router.get("/results")
 def get_results():
     return list(results_collection.find({}, {"_id": 0}))
 
+@router.put("/students/{username}")
+async def update_student(username: str, request: Request):
+    try:
+        data = await request.json()   # 👈 directly get the full body (all 15 fields)
+
+        # Ensure at least one field is sent
+        if not data:
+            raise HTTPException(status_code=400, detail="No data provided")
+
+        result = students_collection.update_one(
+            {"username": username},
+            {"$set": data}
+        )
+
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Student not found")
+
+        return {"message": "Student updated successfully"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/students/upload")
 async def upload_students_file(file: UploadFile = File(...)):
