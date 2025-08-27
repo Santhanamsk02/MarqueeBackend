@@ -163,10 +163,11 @@ def add_question(q: Question):
 def get_questions():
     docs = questions_collection.find({"TestType":"Coding"}, { "Coding": 1, "_id": 0 })
     all_questions = []
+    ques=list(questions_collection.find({"TestType": "Coding"},{"TotalQuestions":1,"_id":0}))[0]
     for doc in docs:
         all_questions.extend(doc["Coding"])
 
-    random_questions = random.sample(all_questions, docs["TotalQuestions"])
+    random_questions = random.sample(all_questions, int(ques["TotalQuestions"]))
 
     return [{"Coding": random_questions}]
 
@@ -176,12 +177,14 @@ def get_questions():
         {"TestType": "MCQ"},
         {"MCQ": 1, "_id": 0}
     ))
+    ques=list(questions_collection.find({"TestType": "MCQ"},{"TotalQuestions":1,"_id":0}))[0]
+   
 
     all_questions = []
     for doc in docs:
         all_questions.extend(doc["MCQ"])
 
-    random_questions = random.sample(all_questions, docs["TotalQuestions"])
+    random_questions = random.sample(all_questions,int(ques["TotalQuestions"]))
 
     return [{"MCQ": random_questions}]
 
