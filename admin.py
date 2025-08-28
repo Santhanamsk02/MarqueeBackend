@@ -58,7 +58,7 @@ async def create_test(test: TestModel):
     result = questions_collection.insert_one(test.dict())
     return {"message": "Test saved successfully", "id": str(result.inserted_id)}
 
-@router.get("/tests")
+@router.get("/gettests")
 async def get_test():
     return list(questions_collection.find({},{"_id":0}))
 
