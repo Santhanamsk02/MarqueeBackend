@@ -13,6 +13,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 import shutil
 import os
+import uvicorn
 app = FastAPI()
 
 app.add_middleware(
@@ -154,4 +155,4 @@ async def submit_exam(data: Request):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
