@@ -138,7 +138,10 @@ async def submit_exam(data: Request):
          "section":section,
          "name":name,
          "regno":regno,
-        "submitted_at": datetime.datetime.utcnow()
+        "submitted_at": datetime.datetime.utcnow(),
+        "done": done, 
+         "doneTest": doneTest,
+         "totalpercent":totalpercent,
     }
 
     results_collection.insert_one(result_doc)
@@ -149,3 +152,6 @@ async def submit_exam(data: Request):
     return {"message": f"Result saved for {username}"}
 
 
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=port, reload=False)
