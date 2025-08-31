@@ -1,7 +1,7 @@
 # backend/main.py
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request,APIRouter,HTTPException,Request,Body
 from fastapi.middleware.cors import CORSMiddleware
-from run_code import run_code
+
 import datetime
 from auth import router as auth_router
 from db import results_collection
@@ -14,6 +14,16 @@ from fastapi.responses import JSONResponse
 import shutil
 import os
 import uvicorn
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from imagekitio import ImageKit
+
+from imagekitio.models.UploadFileRequestOptions import UploadFileRequestOptions
+
+# Initialize ImageKit with environment variables
+
+
 app = FastAPI()
 
 app.add_middleware(
@@ -25,31 +35,14 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(admin_router)
 
-@app.post("/compile")
-async def compile_code(data: Request):
-    body = await data.json()
-    
-    code = body.get("code")
-    lang = body.get("language")
-    expected_output = body.get("expected_output")
-    
 
-    result = run_code(lang, code,expected_output)
-    output = result.get("stdout", "").strip()
-    correct = output == str(expected_output).strip()
-
-    return {
-        "output": output,
-        "success": correct,
-        "error": result.get("stderr") if not correct else None
-    }
-
-cloudinary.config( 
-  cloud_name = "dcfnjebbu", 
-  api_key = "952332849418642", 
-  api_secret = "ZcDgFv3qKFbLjlNVd-m0-qnjd-U",
-  secure = True
+imagekit = ImageKit(
+    private_key="private_i/4+I6CivNKk3MK1NOsUxe/p18g=",
+    public_key="public_wyMUIeVq6wyoVLDl6RwkLvcxirA=",
+    url_endpoint="https://ik.imagekit.io/1drwoyyw8"
 )
+
+
 @app.post("/upload-video")
 async def upload_video(video: UploadFile = File(...)):
     try:
@@ -59,14 +52,14 @@ async def upload_video(video: UploadFile = File(...)):
             shutil.copyfileobj(video.file, buffer)
 
         # Upload to Cloudinary with transformation (low quality)
-        upload_result = cloudinary.uploader.upload(
-            temp_file,
-            resource_type="video",
-            folder="proctoring_uploads",
-            public_id=os.path.splitext(video.filename)[0],
-            eager=[{"quality": "auto:low"}],  # ✅ lower video quality
-            eager_async=True  # run transformation async
+        result = imagekit.upload_file(
+        file=open(temp_file, "rb"),
+        file_name=f"{video.filename}.mp4",
+        options=UploadFileRequestOptions(
+        folder="/Video-Proof/",
         )
+        
+    )
         print("Video uploaded successfully")
         # Remove temp file
         os.remove(temp_file)
@@ -74,7 +67,7 @@ async def upload_video(video: UploadFile = File(...)):
         return JSONResponse(
             content={
                 "message": "Video uploaded successfully",
-                "cloudinary_url": upload_result["secure_url"]
+                "video_url": result.response_metadata.raw["url"]
             }
         )
 
@@ -114,16 +107,16 @@ async def submit_exam(data: Request):
         if not screenshot.startswith("data:image"):
             img_data = f"data:image/png;base64,{screenshot}"
         try:
-            upload_response = cloudinary.uploader.upload(
-                img_data,
-                folder="exam_screenshots",
-                public_id=f"{username}_{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-                overwrite=True,
-                transformation=[
-                    {"quality": "auto", "fetch_format": "auto", "width": 800, "crop": "scale"}
-                ]   
-            )
-            screenshot_url = upload_response.get("secure_url")
+            upload_response = imagekit.upload_file(
+        file=open(img_data, "rb"),
+        file_name=f"{name}_{username}.jpg",
+        options=UploadFileRequestOptions(
+        transformation= {"quality": "20"},
+        folder="/ImageProof/",
+        
+        )
+    )
+            screenshot_url = upload_response.response_metadata.raw["url"]
         except Exception as e:
             screenshot_url = f"Error uploading screenshot: {str(e)}"
 
@@ -152,7 +145,46 @@ async def submit_exam(data: Request):
     )
     return {"message": f"Result saved for {username}"}
 
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+EMAIL_SENDER = "santhanakrishnan9344@gmail.com"
+EMAIL_PASSWORD = "rvwa fnjo qcga gcva"  # use App Password if Gmail
 
+
+@app.post("/send-mail-to-all")
+async def send_mail_to_all(request: Request, message: str = Body(..., embed=True)):
+    try:
+        # Fetch all emails from DB
+        students = list(students_collection.find({}, {"email": 1, "_id": 0}))
+        emails = [student["email"] for student in students if "email" in student]
+
+        if not emails:
+            raise HTTPException(status_code=404, detail="No emails found in database.")
+
+        # Setup SMTP connection
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+
+        # Send mail to each email
+        for email in emails:
+            msg = MIMEMultipart()
+            msg["From"] = EMAIL_SENDER
+            msg["To"] = email
+            msg["Subject"] = "Important Update"
+            msg.attach(MIMEText(message, "plain"))
+
+            server.sendmail(EMAIL_SENDER, email, msg.as_string())
+
+        server.quit()
+
+        return {"status": "success", "sent_to": len(emails)}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+
