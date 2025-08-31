@@ -54,7 +54,7 @@ async def upload_video(video: UploadFile = File(...)):
         # Upload to Cloudinary with transformation (low quality)
         result = imagekit.upload_file(
         file=open(temp_file, "rb"),
-        file_name=f"{video.filename}.mp4",
+        file_name=f"{video.filename}.webM",
         options=UploadFileRequestOptions(
         folder="/Video-Proof/",
         )
