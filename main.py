@@ -13,6 +13,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 import shutil
 import os
+import base64
 import uvicorn
 import smtplib
 from email.mime.text import MIMEText
@@ -105,7 +106,9 @@ async def submit_exam(data: Request):
     if screenshot:
         img_data = screenshot
         if not screenshot.startswith("data:image"):
-            img_data = f"data:image/png;base64,{screenshot}"
+            img_data = base64.b64decode(screenshot.split(",")[1])
+        else:
+            img_data = base64.b64decode(screenshot)
         try:
             upload_response = imagekit.upload_file(
         file=open(img_data, "rb"),
