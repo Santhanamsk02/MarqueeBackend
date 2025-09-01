@@ -119,6 +119,15 @@ async def submit_exam(data: Request):
         "done": done, 
          "doneTest": doneTest,
          "totalpercent":totalpercent,
+         "done": done,
+         "doneTest": doneTest,
+         "mcqdone":mcqdone,
+         "codingdone":codingdone,
+         "mcqpercent":mcqpercent,
+         "codingpercent":codingpercent,
+         "totalpercent":totalpercent,
+         "mcqmalpractice":mcqmalpractice,
+         "codingmalpractice":codingmalpractice
     }
 
     results_collection.insert_one(result_doc)
