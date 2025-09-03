@@ -10,7 +10,7 @@ class LoginRequest(BaseModel):
 
 @router.post("/login")
 async def login(data: LoginRequest):
-    if data.username == "admin" and data.password == "admin@123":
+    if data.username == "systemadmin" and data.password == "admin@pani@1210":
         return {"token": "admin", "role": "admin","done":"none"}
 
     user = users_collection.find_one({
