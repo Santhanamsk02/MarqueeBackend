@@ -7,6 +7,50 @@ router = APIRouter()
 class LoginRequest(BaseModel):
     username: str
     password: str
+    
+    
+class VerifyUserRequest(BaseModel):
+    email: str
+    rollno: str
+    regno: str
+    dob: str
+    
+
+class ResetPasswordRequest(BaseModel):
+    regno: str
+    new_password: str
+
+
+# Step 1: Verify user
+@router.post("/forgot-password-verify")
+async def forgot_password_verify(data: VerifyUserRequest):
+    user = users_collection.find_one({
+        "email": data.email,
+        "rollno": data.rollno,
+        "regno": int(data.regno),
+        "dob": data.dob
+    })
+    print(data)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found or details incorrect")
+
+    return {"message": "User verified. Proceed to reset password."}
+
+
+# Step 2: Reset password
+@router.post("/reset-password")
+async def reset_password(data: ResetPasswordRequest):
+    result = users_collection.update_one(
+        {"regno": int(data.regno)},
+        {"$set": {"password": data.new_password}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {"message": "Password updated successfully"}
+
 
 @router.post("/login")
 async def login(data: LoginRequest):
