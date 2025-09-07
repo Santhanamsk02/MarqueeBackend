@@ -396,3 +396,13 @@ async def upload_excel(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/results/{rollno}")
+def get_results_by_rollno(rollno: str):
+    """Fetch results for a specific student using roll number"""
+    result = list(results_collection.find({"regno": rollno}, {"_id": 0}))
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="No results found for this roll number")
+    
+    return result

@@ -65,8 +65,6 @@ async def login(data: LoginRequest):
 
     if not user:
         raise HTTPException(status_code=401, detail="Invalid Credentials")
-    if (user["restrict"] == True):
-        raise HTTPException(status_code=403, detail="User Restricted")
 
     return {"token": data.username, "role": "student","done":str(user["done"]),"doneTest":user["doneTest"],"department":user["department"],"year":user["Year"],"section":user["Section"],"name":user["name"],"regno":user["regno"],"mcqdone":user["mcqdone"],"codingdone":user["codingdone"],"mcqpercent":user["mcqpercent"],"codingpercent":user["codingpercent"],"totalpercent":user["totalpercent"],"mcqmalpractice":user["mcqmalpractice"],"codingmalpractice":user["codingmalpractice"]}
 
