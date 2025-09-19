@@ -253,6 +253,7 @@ async def upload_excel(
     TestType: str = Form(...),
     TotalQuestions: str = Form(...),
     StartTime: str = Form(...),
+    category:str=Form(...),
 ):
     contents = await file.read()
     try:
@@ -339,6 +340,7 @@ async def upload_excel(
                     "TestType": TestType,
                     "StartTime": StartTime,
                     "TestName": TestName,
+                    "category":category,
                     "Time": Time,
                     "TotalQuestions": TotalQuestions,
                     "MCQ": successful_questions,
@@ -380,6 +382,7 @@ async def upload_excel(
                     "TestName": TestName,
                     "StartTime": StartTime,
                     "Time": Time,
+                    "category":category,
                     "TotalQuestions": TotalQuestions,
                     "Coding": questions,
                 }
